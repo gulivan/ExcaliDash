@@ -25,11 +25,20 @@ export const registerLibraryRoutes = (
       return res.status(400).json({ error: "Items must be an array" });
     }
 
+    if (items.length > 10000) {
+      return res.status(400).json({ error: "Library items limit exceeded (max 10,000)" });
+    }
+
+    const serialized = JSON.stringify(items);
+    if (serialized.length > 50 * 1024 * 1024) {
+      return res.status(400).json({ error: "Library data too large" });
+    }
+
     const libraryId = `user_${req.user.id}`;
     const library = await prisma.library.upsert({
       where: { id: libraryId },
-      update: { items: JSON.stringify(items) },
-      create: { id: libraryId, items: JSON.stringify(items) },
+      update: { items: serialized },
+      create: { id: libraryId, items: serialized },
     });
 
     return res.json({ items: parseJsonField(library.items, []) });
