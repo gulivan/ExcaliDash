@@ -11,6 +11,7 @@ import {
   CopyObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { config } from "./config";
 
 export interface S3Config {
   bucket: string;
@@ -32,8 +33,7 @@ let s3Config: S3Config | null = null;
  * Shared S3 object-key prefix. Reading the env var in one place avoids
  * upload and cleanup code paths drifting onto different prefixes.
  */
-export const FILE_KEY_PREFIX =
-  process.env.S3_KEY_PREFIX?.replace(/\/+$/, "") || "excalidash";
+export const FILE_KEY_PREFIX = config.s3.keyPrefix;
 
 /**
  * Build the canonical S3 object key for a given drawing's image file.

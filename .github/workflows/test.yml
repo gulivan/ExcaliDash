@@ -36,6 +36,35 @@ jobs:
           cd backend
           npm test
 
+  repo-checks:
+    name: Repo Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Check max source line count
+        run: |
+          cd backend
+          npm run check:max-lines
+
+      - name: Check env boundary
+        run: |
+          cd backend
+          npm run check:env-boundary
+
   frontend-unit-tests:
     name: Frontend Unit Tests
     runs-on: ubuntu-latest

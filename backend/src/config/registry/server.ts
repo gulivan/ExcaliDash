@@ -1,0 +1,75 @@
+import type { EnvVarSpec } from "./types";
+
+export const serverEnv: readonly EnvVarSpec[] = [
+  {
+    name: "PORT",
+    group: "Server",
+    kind: "number",
+    default: "8000",
+    doc: "TCP port the backend HTTP server listens on.",
+  },
+  {
+    name: "NODE_ENV",
+    group: "Server",
+    kind: "enum",
+    values: ["development", "production", "test"],
+    default: "development",
+    doc: "Runtime environment; production enables extra validation and hardening.",
+  },
+  {
+    name: "FRONTEND_URL",
+    group: "Server",
+    kind: "csv",
+    doc: "Comma-separated CORS allowlist of frontend origins; also drives HTTPS detection.",
+    example: "https://excalidash.example.com",
+  },
+  {
+    name: "TRUST_PROXY",
+    group: "Server",
+    kind: "string",
+    default: "false",
+    doc: "Express trust proxy setting: true, false, or a positive hop count.",
+    example: "1",
+  },
+  {
+    name: "DRAWINGS_CACHE_TTL_MS",
+    group: "Server",
+    kind: "number",
+    default: "5000",
+    doc: "In-memory drawings list cache TTL in milliseconds.",
+  },
+];
+
+export const databaseEnv: readonly EnvVarSpec[] = [
+  {
+    name: "DATABASE_URL",
+    group: "Database",
+    kind: "string",
+    default: "file:<backend>/prisma/dev.db",
+    doc: "Prisma database connection string; file: paths are normalized against prisma/.",
+    example: "postgresql://user:pass@localhost:5432/excalidash",
+  },
+  {
+    name: "DATABASE_PROVIDER",
+    group: "Database",
+    kind: "enum",
+    values: ["sqlite", "postgresql"],
+    default: "sqlite",
+    docsOnly: true,
+    doc: "Prisma datasource provider selected by the docker entrypoint.",
+  },
+  {
+    name: "RUN_MIGRATIONS",
+    group: "Database",
+    kind: "boolean",
+    docsOnly: true,
+    doc: "Whether the docker entrypoint applies pending migrations on startup.",
+  },
+  {
+    name: "MIGRATION_LOCK_TIMEOUT_SECONDS",
+    group: "Database",
+    kind: "number",
+    docsOnly: true,
+    doc: "Advisory-lock timeout (seconds) used by the migration entrypoint.",
+  },
+];

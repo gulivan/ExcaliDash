@@ -1,6 +1,7 @@
 import crypto from "crypto";
+import { config } from "../config";
 
-const API_KEY_SCRYPT_PEPPER = process.env.API_KEY_HASH_PEPPER || "api-key-hash-pepper";
+const API_KEY_SCRYPT_PEPPER = config.apiKeyHashPepper;
 const API_KEY_SCRYPT_N = 1 << 14;
 const API_KEY_SCRYPT_R = 8;
 const API_KEY_SCRYPT_P = 1;

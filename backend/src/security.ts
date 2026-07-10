@@ -1,7 +1,7 @@
 /**
  * Security utilities for XSS prevention, data sanitization, and CSRF protection
  */
-import { z } from "zod"; import DOMPurify from "dompurify"; import { JSDOM } from "jsdom"; import crypto from "crypto"; const window = new JSDOM("").window; const purify = DOMPurify(window);
+import { z } from "zod"; import DOMPurify from "dompurify"; import { JSDOM } from "jsdom"; import crypto from "crypto"; import { config } from "./config"; const window = new JSDOM("").window; const purify = DOMPurify(window);
 /**
  * Configuration for security limits
  */
@@ -109,9 +109,9 @@ isDeleted: z.boolean().optional().nullable(), opacity: z.number().optional().nul
 (pattern) => pattern.test(value) ); if (hasDangerousProtocol) { file[key] = ""; continue; } const isSafeImageType = safeImageTypes.some((type) => normalizedValue.startsWith(type) ); if (isSafeImageType) { const hasSuspiciousContent = suspiciousPatterns.some(
 (pattern) => pattern.test(value) ); const isTooLarge = value.length > MAX_DATAURL_SIZE; if (hasSuspiciousContent || isTooLarge) { file[key] = ""; } else { file[key] = value; } } else if (/^https?:\/\//i.test(value)) { const hasSuspiciousContent = suspiciousPatterns.some(
 (pattern) => pattern.test(value) ); if (hasSuspiciousContent || value.length > 2048) { file[key] = ""; } else { file[key] = value; } } else if (/^\/api\/files\/[\w-]{1,200}\/[\w-]{1,200}$/.test(value)) { file[key] = value; } else { file[key] = sanitizeText(value, 1000); } } else { file[key] = sanitizeText(value, 1000); } } } } } } return { elements: sanitizedElements, appState: sanitizedAppState, files: sanitizedFiles, preview: sanitizedPreview, }; } catch (error) { console.error("Data sanitization failed:", error); throw new Error("Invalid or malicious drawing data detected"); } }; export const validateImportedDrawing = (data: any): boolean => { try { if (!data || typeof data !== "object") return false; if (!Array.isArray(data.elements)) return false; if (typeof data.appState !== "object") return false; if (data.elements.length > 10000) {
-throw new Error("Drawing contains too many elements (max 10,000)"); } const sanitized = sanitizeDrawingData(data); if (sanitized.elements.length !== data.elements.length) { throw new Error("Element count mismatch after sanitization"); } return true; } catch (error) { console.error("Imported drawing validation failed:", error); return false; } }; const CSRF_TOKEN_HEADER = "x-csrf-token"; const CSRF_TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; const CSRF_TOKEN_FUTURE_SKEW_MS = 5 * 60 * 1000; const CSRF_NONCE_BYTES = 16; const CSRF_TOKEN_MAX_LENGTH = 2048; let cachedCsrfSecret: Buffer | null = null; const getCsrfSecret = (): Buffer => { if (cachedCsrfSecret) return cachedCsrfSecret; const secretFromEnv = process.env.CSRF_SECRET; if (secretFromEnv && secretFromEnv.trim().length > 0) { cachedCsrfSecret = Buffer.from(secretFromEnv, "utf8"); return cachedCsrfSecret; }
+throw new Error("Drawing contains too many elements (max 10,000)"); } const sanitized = sanitizeDrawingData(data); if (sanitized.elements.length !== data.elements.length) { throw new Error("Element count mismatch after sanitization"); } return true; } catch (error) { console.error("Imported drawing validation failed:", error); return false; } }; const CSRF_TOKEN_HEADER = "x-csrf-token"; const CSRF_TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; const CSRF_TOKEN_FUTURE_SKEW_MS = 5 * 60 * 1000; const CSRF_NONCE_BYTES = 16; const CSRF_TOKEN_MAX_LENGTH = 2048; let cachedCsrfSecret: Buffer | null = null; const getCsrfSecret = (): Buffer => { if (cachedCsrfSecret) return cachedCsrfSecret; const secretFromEnv = config.csrfSecret; if (secretFromEnv && secretFromEnv.trim().length > 0) { cachedCsrfSecret = Buffer.from(secretFromEnv, "utf8"); return cachedCsrfSecret; }
 cachedCsrfSecret = crypto.randomBytes(32);
-  const envLabel = process.env.NODE_ENV ? ` (${process.env.NODE_ENV})` : "";
+  const envLabel = config.nodeEnv ? ` (${config.nodeEnv})` : "";
 console.warn(
     `[SECURITY WARNING] CSRF_SECRET is not set${envLabel}.\n` +
       `Using an ephemeral per-process secret.\n` +

@@ -11,6 +11,7 @@ import {
   listS3Objects,
 } from "../../s3";
 import { type DrawingPrincipal } from "../../authz/sharing";
+import { config } from "../../config";
 
 export type DrawingRouteContext = DashboardRouteDeps & {
   getRequestPrincipal: (req: express.Request) => Promise<DrawingPrincipal | null>;
@@ -41,23 +42,12 @@ export const createDrawingRouteContext = (
     return null;
   };
 
-  const resolveDefaultTtlMs = (permission: "view" | "edit"): number => {
-    const raw =
-      permission === "edit"
-        ? process.env.LINK_SHARE_EDIT_DEFAULT_TTL_MS
-        : process.env.LINK_SHARE_VIEW_DEFAULT_TTL_MS;
-    const parsed = raw ? Number(raw) : NaN;
-    if (Number.isFinite(parsed) && parsed > 0) return parsed;
-    return permission === "edit"
-      ? 7 * 24 * 60 * 60 * 1000
-      : 30 * 24 * 60 * 60 * 1000;
-  };
+  const resolveDefaultTtlMs = (permission: "view" | "edit"): number =>
+    permission === "edit"
+      ? config.linkShare.editDefaultTtlMs
+      : config.linkShare.viewDefaultTtlMs;
 
-  const resolveMaxTtlMs = (): number => {
-    const parsed = Number(process.env.LINK_SHARE_MAX_TTL_MS);
-    if (Number.isFinite(parsed) && parsed > 0) return parsed;
-    return 90 * 24 * 60 * 60 * 1000;
-  };
+  const resolveMaxTtlMs = (): number => config.linkShare.maxTtlMs;
 
   const respondWithAuthErrorIfPresent = (
     req: express.Request,

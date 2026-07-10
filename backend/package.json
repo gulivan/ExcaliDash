@@ -16,7 +16,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "check:max-lines": "node ../scripts/check-source-line-count.cjs"
+    "check:max-lines": "node ../scripts/check-source-line-count.cjs",
+    "check:env-boundary": "node ../scripts/check-env-boundary.cjs",
+    "gen:env": "ts-node src/config/generateEnvReference.ts"
   },
   "keywords": [],
   "author": "",
