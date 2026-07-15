@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { MutableRefObject, RefObject } from "react";
+import type { MutableRefObject } from "react";
 import { io, type Socket } from "socket.io-client";
 import { toast } from "sonner";
 import type { UserIdentity } from "../../utils/identity";
@@ -14,7 +14,6 @@ type UseEditorCollaborationInput = {
   me: UserIdentity;
   isReady: boolean;
   excalidrawAPI: MutableRefObject<any>;
-  editorContainerRef: RefObject<HTMLDivElement>;
   lastSyncedFilesRef: MutableRefObject<Record<string, any>>;
   lastSyncedElementOrderSigRef: MutableRefObject<string>;
   latestElementsRef: MutableRefObject<readonly any[]>;
@@ -36,7 +35,6 @@ export const useEditorCollaboration = ({
   me,
   isReady,
   excalidrawAPI,
-  editorContainerRef,
   lastSyncedFilesRef,
   lastSyncedElementOrderSigRef,
   latestElementsRef,
@@ -52,7 +50,7 @@ export const useEditorCollaboration = ({
   const lastPresenceUsersRef = useRef<Peer[] | null>(null);
   const lastCursorEmit = useRef<number>(0);
   const cursorBuffer = useRef<Map<string, any>>(new Map());
-  const animationFrameId = useRef<number>(0);
+  const animationFrameId = useRef<number | null>(null);
   const isSyncing = useRef(false);
   const pendingRemoteElementsRef = useRef<Map<string, any>>(new Map());
   const pendingRemoteFilesRef = useRef<Record<string, any>>({});
@@ -107,7 +105,8 @@ export const useEditorCollaboration = ({
         setPeers(lastUsers.filter((u) => u.id !== next.id));
       }
     });
-    const renderLoop = () => {
+    const flushCursors = () => {
+      animationFrameId.current = null;
       if (cursorBuffer.current.size > 0 && excalidrawAPI.current) {
         const collaborators = new Map<string, any>(
           excalidrawAPI.current.getAppState().collaborators || [],
@@ -121,9 +120,7 @@ export const useEditorCollaboration = ({
           excalidrawAPI.current.updateScene(sceneUpdate);
         }
       }
-      animationFrameId.current = requestAnimationFrame(renderLoop);
     };
-    renderLoop();
     socket.on("presence-update", (users: Peer[]) => {
       lastPresenceUsersRef.current = users;
       const selfId = socketMeRef.current.id;
@@ -162,6 +159,9 @@ export const useEditorCollaboration = ({
         color: { background: data.color, stroke: data.color },
         id: data.userId,
       });
+      if (animationFrameId.current === null) {
+        animationFrameId.current = requestAnimationFrame(flushCursors);
+      }
     });
     const hasNonEmptyArray = (value: unknown): value is any[] =>
       Array.isArray(value) && value.length > 0;
@@ -286,43 +286,7 @@ export const useEditorCollaboration = ({
     window.addEventListener("blur", onBlur);
     document.addEventListener("mouseenter", onMouseEnter);
     document.addEventListener("mouseleave", onMouseLeave);
-    const container = editorContainerRef.current;
-    const handleWheel = (event: WheelEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (!target) return;
-      const isCanvas = target.tagName?.toLowerCase() === "canvas";
-      const isEditorUi =
-        target.closest(".layer-ui__wrapper") !== null ||
-        target.closest(".App-menu") !== null;
-      if (
-        isCanvas &&
-        !isEditorUi &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        !(event as any)._isFakeZoom
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-        const zoomEvent = new WheelEvent("wheel", {
-          bubbles: true,
-          cancelable: true,
-          clientX: event.clientX,
-          clientY: event.clientY,
-          deltaX: event.deltaX,
-          deltaY: event.deltaY,
-          deltaMode: event.deltaMode,
-          ctrlKey: true,
-        });
-        (zoomEvent as any)._isFakeZoom = true;
-        target.dispatchEvent(zoomEvent);
-      }
-    };
-    container?.addEventListener("wheel", handleWheel, {
-      capture: true,
-      passive: false,
-    });
     return () => {
-      container?.removeEventListener("wheel", handleWheel, { capture: true });
       window.removeEventListener("focus", onFocus);
       window.removeEventListener("blur", onBlur);
       document.removeEventListener("mouseenter", onMouseEnter);
@@ -341,14 +305,16 @@ export const useEditorCollaboration = ({
       pendingRemoteElementsRef.current.clear();
       pendingRemoteFilesRef.current = {};
       pendingRemoteElementOrderRef.current = null;
-      cancelAnimationFrame(animationFrameId.current);
+      if (animationFrameId.current !== null) {
+        cancelAnimationFrame(animationFrameId.current);
+        animationFrameId.current = null;
+      }
     };
   }, [
     drawingId,
     me,
     isReady,
     excalidrawAPI,
-    editorContainerRef,
     lastSyncedFilesRef,
     lastSyncedElementOrderSigRef,
     latestElementsRef,

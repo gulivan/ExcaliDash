@@ -110,7 +110,6 @@ export const Editor: React.FC = () => {
       me,
       isReady,
       excalidrawAPI,
-      editorContainerRef,
       lastSyncedFilesRef,
       lastSyncedElementOrderSigRef,
       latestElementsRef,

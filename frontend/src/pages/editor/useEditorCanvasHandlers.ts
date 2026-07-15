@@ -118,6 +118,7 @@ export const useEditorCanvasHandlers = ({
         isBootstrappingSceneRef.current = false;
         if (matchesInitialSnapshot) return;
       }
+      if (haveSameElements(allElements, latestElementsRef.current)) return;
       const { prevented: preventedCanvasOverwrite } =
         resolveSafeSnapshot(allElements);
       if (preventedCanvasOverwrite) return;

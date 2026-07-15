@@ -218,7 +218,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
     </header>
     <div
       ref={editorContainerRef}
-      className="flex-1 w-full relative transition-all duration-300"
+      className="flex-1 w-full relative transition-[height,margin] duration-300"
       onDropCapture={onCanvasDropCapture}
       style={{
         height: isHeaderVisible ? "calc(100vh - 4rem)" : "100vh",
