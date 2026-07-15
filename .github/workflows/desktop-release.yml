@@ -93,7 +93,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev xvfb
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev xvfb zstd
       - name: Install dependencies
         run: |
           npm ci --prefix backend
@@ -101,12 +101,18 @@ jobs:
           npm ci --prefix desktop
       - name: Build desktop app
         run: npm run build --prefix desktop
+      - name: Extract portable app bundle
+        shell: bash
+        run: |
+          ARCHIVE=$(find desktop/artifacts -maxdepth 1 -type f -name '*-ExcaliDash.tar.zst' | head -1)
+          test -n "$ARCHIVE"
+          mkdir -p desktop/portable-linux
+          zstd --decompress --stdout "$ARCHIVE" | tar -xf - -C desktop/portable-linux
+          test -x desktop/portable-linux/ExcaliDash/bin/launcher
       - name: Smoke test packaged app
         shell: bash
         run: |
-          BUILD_DIR=$(find desktop/build -maxdepth 1 -type d -name 'stable-linux-*' | head -1)
-          APP_DIR="$BUILD_DIR/ExcaliDash"
-          test -x "$APP_DIR/bin/launcher"
+          APP_DIR=desktop/portable-linux/ExcaliDash
           xvfb-run -a "$APP_DIR/bin/launcher" >localdraw-linux.log 2>&1 &
           APP_PID=$!
           trap 'kill "$APP_PID" 2>/dev/null || true' EXIT
@@ -129,8 +135,7 @@ jobs:
           TAG="${{ github.event.release.tag_name || inputs.tag }}"
           VERSION="${TAG#v}"
           VERSION="${VERSION%-desktop}"
-          BUILD_DIR=$(find desktop/build -maxdepth 1 -type d -name 'stable-linux-*' | head -1)
-          BUNDLE_DIR="$BUILD_DIR/ExcaliDash"
+          BUNDLE_DIR=desktop/portable-linux/ExcaliDash
           test -d "$BUNDLE_DIR"
           ASSET="localdraw-${VERSION}-linux-x64.tar.gz"
           tar -C "$BUNDLE_DIR" -czf "$ASSET" .
@@ -167,16 +172,22 @@ jobs:
           npm ci --prefix desktop
       - name: Build desktop app
         run: npm run build --prefix desktop
+      - name: Extract portable app bundle
+        shell: pwsh
+        run: |
+          $archive = Get-ChildItem desktop/artifacts -File -Filter '*-ExcaliDash.tar.zst' | Select-Object -First 1
+          if (-not $archive) { throw 'No Windows portable archive found' }
+          $portableDir = 'desktop/portable-win'
+          New-Item -ItemType Directory -Path $portableDir -Force | Out-Null
+          tar -xf $archive.FullName -C $portableDir
+          if (-not (Test-Path "$portableDir/ExcaliDash/bin/launcher.exe")) { throw 'Windows launcher not found' }
       - name: Prepare release asset
         id: asset
         shell: pwsh
         run: |
           $tag = "${{ github.event.release.tag_name || inputs.tag }}"
           $version = $tag -replace '^v', '' -replace '-desktop$', ''
-          $buildDir = Get-ChildItem desktop/build -Directory -Filter 'stable-win-*' | Select-Object -First 1
-          if (-not $buildDir) { throw 'No Windows build output found' }
-          $bundleDir = Join-Path $buildDir.FullName "ExcaliDash"
-          if (-not (Test-Path "$bundleDir/bin/launcher.exe")) { throw 'Windows launcher not found' }
+          $bundleDir = 'desktop/portable-win/ExcaliDash'
           $asset = "localdraw-$version-win-x64.zip"
           Compress-Archive -Path "$bundleDir/*" -DestinationPath $asset -Force
           $hash = (Get-FileHash -Algorithm SHA256 $asset).Hash.ToLowerInvariant()
