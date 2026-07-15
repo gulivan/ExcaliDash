@@ -1,0 +1,9 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    allow:
+      - dependency-name: "@excalidraw/excalidraw"
+    open-pull-requests-limit: 1

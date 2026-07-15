@@ -127,6 +127,26 @@ Notes:
 
 # Installation
 
+## Personal desktop app (Apple silicon)
+
+Run ExcaliDash as a local Electrobun application without Docker, accounts, or passwords:
+
+```bash
+npx localdraw
+```
+
+The first run installs the checksum-verified app in `~/Applications`; later runs open it directly. Drawings live in a private SQLite database under the app's standard user-data directory. The desktop build binds its frontend and API to `127.0.0.1` only and disables outbound update checks.
+
+To build it from source:
+
+```bash
+cd desktop
+npm install
+npm run build
+```
+
+Native artifacts are written to `desktop/artifacts/`. Linux, Windows, and Intel Mac packages are not part of the first desktop release.
+
 > [!CAUTION]
 > This is a BETA deployment and production-readiness depends on deployment controls:
 > use TLS, trusted reverse proxy, fixed secrets, backups, and endpoint rate limits.
