@@ -67,7 +67,10 @@ const installMacArm64 = async () => {
     mkdirSync(userApplicationsDir, { recursive: true });
     rmSync(installedMacApp, { recursive: true, force: true });
     run("ditto", [join(mountPath, "ExcaliDash.app"), installedMacApp]);
-    run("hdiutil", ["detach", mountPath]);
+    // APFS images can report a short-lived "resource busy" after ditto.
+    // The finally block retries the detach and cleanup without turning a
+    // successful installation into a failed npx run.
+    spawnSync("hdiutil", ["detach", mountPath], { stdio: "ignore" });
     console.log(`Installed ExcaliDash in ${userApplicationsDir}`);
   } finally {
     if (existsSync(mountPath)) {
