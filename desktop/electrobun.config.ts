@@ -4,7 +4,7 @@ export default {
   app: {
     name: "ExcaliDash",
     identifier: "dev.gulivan.excalidash",
-    version: "0.5.4",
+    version: "0.5.5",
   },
   runtime: {
     exitOnLastWindowClosed: true,
@@ -19,7 +19,7 @@ export default {
       "build/template.db": "template.db",
     },
     mac: { bundleCEF: false },
-    linux: { bundleCEF: true, defaultRenderer: "cef" },
+    linux: { bundleCEF: false, defaultRenderer: "native" },
     win: { bundleCEF: false },
   },
 } satisfies ElectrobunConfig;

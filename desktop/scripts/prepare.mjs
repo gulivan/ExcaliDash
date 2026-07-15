@@ -1,6 +1,11 @@
+import { createRequire } from "node:module";
 import { cpSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import {
+  pruneDesktopDependencies,
+  selectQueryEngine,
+} from "./prepare-utils.mjs";
 
 const desktopDir = resolve(import.meta.dirname, "..");
 const rootDir = resolve(desktopDir, "..");
@@ -11,6 +16,7 @@ const stagedBackendDir = resolve(buildDir, "backend");
 const generatedClientDir = resolve(backendDir, "src/generated/client");
 const stagedGeneratedClientDir = resolve(stagedBackendDir, "dist/generated/client");
 const templateDb = resolve(buildDir, "template.db");
+const requireFromBackend = createRequire(resolve(backendDir, "package.json"));
 
 const run = (command, args, options = {}) => {
   const result = spawnSync(command, args, {
@@ -43,22 +49,18 @@ mkdirSync(stagedBackendDir, { recursive: true });
 cpSync(resolve(backendDir, "dist"), resolve(stagedBackendDir, "dist"), {
   recursive: true,
 });
-const queryEngines = readdirSync(generatedClientDir).filter(
-  (name) => name.includes("query_engine") && name.endsWith(".node"),
-);
-if (queryEngines.length === 0) {
-  throw new Error("Prisma generated no native query engine for the desktop package.");
-}
+const { getBinaryTargetForCurrentPlatform } = requireFromBackend("@prisma/get-platform");
+const binaryTarget = await getBinaryTargetForCurrentPlatform();
+const queryEngine = selectQueryEngine(readdirSync(generatedClientDir), binaryTarget);
 mkdirSync(stagedGeneratedClientDir, { recursive: true });
-for (const queryEngine of queryEngines) {
-  cpSync(
-    resolve(generatedClientDir, queryEngine),
-    resolve(stagedGeneratedClientDir, queryEngine),
-  );
-}
+cpSync(
+  resolve(generatedClientDir, queryEngine),
+  resolve(stagedGeneratedClientDir, queryEngine),
+);
 cpSync(resolve(backendDir, "package.json"), resolve(stagedBackendDir, "package.json"));
 cpSync(
   resolve(backendDir, "package-lock.json"),
   resolve(stagedBackendDir, "package-lock.json"),
 );
 run("npm", ["ci", "--omit=dev"], { cwd: stagedBackendDir });
+pruneDesktopDependencies(stagedBackendDir);

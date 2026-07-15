@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { getInstallLayout, getTarget } from "../lib/platform.js";
 
 test("maps supported platforms to release assets", () => {
-  assert.equal(getTarget("darwin", "arm64").archive, "localdraw-0.5.4-darwin-arm64.dmg");
-  assert.equal(getTarget("darwin", "x64").archive, "localdraw-0.5.4-darwin-x64.dmg");
-  assert.equal(getTarget("linux", "x64").archive, "localdraw-0.5.4-linux-x64.tar.gz");
-  assert.equal(getTarget("win32", "arm64").archive, "localdraw-0.5.4-win-x64.zip");
+  assert.equal(getTarget("darwin", "arm64").archive, "localdraw-0.5.5-darwin-arm64.dmg");
+  assert.equal(getTarget("darwin", "x64").archive, "localdraw-0.5.5-darwin-x64.dmg");
+  assert.equal(getTarget("linux", "x64").archive, "localdraw-0.5.5-linux-x64.tar.gz");
+  assert.equal(getTarget("win32", "arm64").archive, "localdraw-0.5.5-win-x64.zip");
 });
 
 test("rejects architectures without a published native build", () => {
@@ -19,5 +19,15 @@ test("uses user-writable install locations", () => {
   assert.match(
     getInstallLayout("win32", "C:\\Users\\me", "C:\\LocalAppData").installDir,
     /LocalDraw/,
+  );
+});
+
+test("uses executable paths from flattened Electrobun bundles", () => {
+  assert.deepEqual(getInstallLayout("linux", "/home/me").executables, [
+    "/home/me/.local/share/localdraw/app/bin/launcher",
+  ]);
+  assert.deepEqual(
+    getInstallLayout("win32", "C:\\Users\\me", "C:\\LocalAppData").executables,
+    ["C:\\LocalAppData/LocalDraw/bin/launcher.exe"],
   );
 });

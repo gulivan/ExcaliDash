@@ -1,14 +1,15 @@
 {
   "name": "excalidash-desktop",
   "private": true,
-  "version": "0.5.4",
+  "version": "0.5.5",
   "type": "module",
   "scripts": {
     "prepare:app": "node scripts/prepare.mjs",
     "dev": "npm run prepare:app && electrobun dev",
     "build": "npm run prepare:app && electrobun build --env=stable",
     "build:canary": "npm run prepare:app && electrobun build --env=canary",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test"
   },
   "dependencies": {
     "electrobun": "1.18.1"

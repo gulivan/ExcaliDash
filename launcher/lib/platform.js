@@ -1,7 +1,7 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-export const RELEASE_VERSION = "0.5.4-desktop";
+export const RELEASE_VERSION = "0.5.5-desktop";
 export const APP_VERSION = RELEASE_VERSION.replace(/-desktop$/, "");
 
 export const getTarget = (platform = process.platform, arch = process.arch) => {
@@ -51,7 +51,7 @@ export const getInstallLayout = (
     const installDir = join(home, ".local", "share", "localdraw", "app");
     return {
       installDir,
-      executables: [join(installDir, "launcher")],
+      executables: [join(installDir, "bin", "launcher")],
       versionFile: join(home, ".local", "share", "localdraw", "version"),
     };
   }
@@ -60,10 +60,7 @@ export const getInstallLayout = (
   const installDir = join(base, "LocalDraw");
   return {
     installDir,
-    executables: [
-      join(installDir, "ExcaliDash.exe"),
-      join(installDir, "launcher.exe"),
-    ],
+    executables: [join(installDir, "bin", "launcher.exe")],
     versionFile: join(installDir, "launcher-version"),
   };
 };

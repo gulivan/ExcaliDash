@@ -85,7 +85,7 @@ Bun.serve({
 new BrowserWindow({
   title: "ExcaliDash",
   url: appUrl,
-  renderer: process.platform === "linux" ? "cef" : "native",
+  renderer: "native",
   frame: {
     width: 1440,
     height: 960,
