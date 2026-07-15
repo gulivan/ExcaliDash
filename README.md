@@ -139,6 +139,12 @@ The first run downloads and installs a checksum-verified native build; later run
 
 Drawings live in a private SQLite database under the app's standard user-data directory. The desktop build binds its frontend and API to `127.0.0.1` only and disables outbound update checks.
 
+The CJK handwriting font is optional and is not bundled with the desktop
+download. When a drawing first needs a Xiaolai Unicode subset, LocalDraw fetches
+that subset from the version-pinned Excalidraw package on jsDelivr, verifies its
+SHA-256 checksum, and caches it in the app's user-data directory. If the machine
+is offline, the editor uses the system font fallback instead.
+
 To build it from source:
 
 ```bash

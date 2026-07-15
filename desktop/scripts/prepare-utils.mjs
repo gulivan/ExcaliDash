@@ -1,4 +1,10 @@
-import { existsSync, readdirSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+} from "node:fs";
+import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 
 export const selectQueryEngine = (fileNames, binaryTarget) => {
@@ -14,6 +20,29 @@ export const selectQueryEngine = (fileNames, binaryTarget) => {
   }
 
   return matches[0];
+};
+
+export const createXiaolaiManifest = (directory, packageVersion) => {
+  const files = {};
+  for (const entry of readdirSync(directory, { withFileTypes: true }).sort(
+    (left, right) => left.name.localeCompare(right.name),
+  )) {
+    if (
+      !entry.isFile() ||
+      !/^Xiaolai-Regular-[a-f\d]{32}\.woff2$/.test(entry.name)
+    ) {
+      throw new Error(`Unexpected Xiaolai asset: ${entry.name}`);
+    }
+    const contents = readFileSync(resolve(directory, entry.name));
+    files[entry.name] = {
+      bytes: contents.byteLength,
+      sha256: createHash("sha256").update(contents).digest("hex"),
+    };
+  }
+  if (Object.keys(files).length === 0) {
+    throw new Error("No Xiaolai font subsets were found.");
+  }
+  return { packageVersion, files };
 };
 
 export const pruneDesktopDependencies = (stagedBackendDir) => {

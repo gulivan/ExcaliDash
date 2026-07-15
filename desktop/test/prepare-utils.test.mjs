@@ -5,9 +5,33 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import {
+  createXiaolaiManifest,
   pruneDesktopDependencies,
   selectQueryEngine,
 } from "../scripts/prepare-utils.mjs";
+
+test(
+  "creates a deterministic checksum manifest for Xiaolai subsets",
+  async (t) => {
+    const root = await mkdtemp(join(tmpdir(), "localdraw-xiaolai-"));
+    t.after(() => rm(root, { recursive: true, force: true }));
+    writeFileSync(
+      join(root, "Xiaolai-Regular-0123456789abcdef0123456789abcdef.woff2"),
+      "font-data",
+    );
+
+    assert.deepEqual(createXiaolaiManifest(root, "0.18.1"), {
+      packageVersion: "0.18.1",
+      files: {
+        "Xiaolai-Regular-0123456789abcdef0123456789abcdef.woff2": {
+          bytes: 9,
+          sha256:
+            "a9b88942ff0937d83135f1954466ae7e335a1eae4aa00602084a90e598759871",
+        },
+      },
+    });
+  },
+);
 
 test("selects only the query engine matching the host binary target", () => {
   const files = [

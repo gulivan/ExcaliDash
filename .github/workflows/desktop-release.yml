@@ -72,14 +72,14 @@ jobs:
         run: |
           ASSET="${{ steps.asset.outputs.asset }}"
           BYTES=$(stat -f%z "$ASSET")
-          LIMIT=$((60 * 1024 * 1024))
+          LIMIT=$((40 * 1024 * 1024))
           {
             echo "### macOS ${{ matrix.arch }} desktop size"
             echo
             echo "- Download: $(du -h "$ASSET" | cut -f1) ($BYTES bytes)"
             echo "- Backend: $(du -sh desktop/build/stable-macos-*/ExcaliDash.app/Contents/Resources/app/backend | cut -f1)"
             echo "- Frontend: $(du -sh desktop/build/stable-macos-*/ExcaliDash.app/Contents/Resources/app/frontend | cut -f1)"
-            echo "- Limit: 60 MiB"
+            echo "- Limit: 40 MiB"
           } >> "$GITHUB_STEP_SUMMARY"
           test "$BYTES" -le "$LIMIT"
       - name: Upload release asset
@@ -178,7 +178,7 @@ jobs:
         run: |
           ASSET="${{ steps.asset.outputs.asset }}"
           BYTES=$(stat -c%s "$ASSET")
-          LIMIT=$((85 * 1024 * 1024))
+          LIMIT=$((70 * 1024 * 1024))
           {
             echo "### Linux x64 desktop size"
             echo
@@ -186,7 +186,7 @@ jobs:
             echo "- Runtime: $(du -sh desktop/portable-linux/ExcaliDash/bin | cut -f1)"
             echo "- Backend: $(du -sh desktop/portable-linux/ExcaliDash/Resources/app/backend | cut -f1)"
             echo "- Frontend: $(du -sh desktop/portable-linux/ExcaliDash/Resources/app/frontend | cut -f1)"
-            echo "- Limit: 85 MiB"
+            echo "- Limit: 70 MiB"
           } >> "$GITHUB_STEP_SUMMARY"
           test "$BYTES" -le "$LIMIT"
       - name: Upload release asset
@@ -246,7 +246,7 @@ jobs:
         run: |
           $asset = "${{ steps.asset.outputs.asset }}"
           $bytes = (Get-Item $asset).Length
-          $limit = 100 * 1024 * 1024
+          $limit = 80 * 1024 * 1024
           $bundle = 'desktop/portable-win/ExcaliDash'
           $directorySize = {
             param($path)
@@ -260,10 +260,10 @@ jobs:
             "- Runtime: $(& $directorySize "$bundle/bin")"
             "- Backend: $(& $directorySize "$bundle/Resources/app/backend")"
             "- Frontend: $(& $directorySize "$bundle/Resources/app/frontend")"
-            '- Limit: 100 MiB'
+            '- Limit: 80 MiB'
           ) | Add-Content $env:GITHUB_STEP_SUMMARY
           if ($bytes -gt $limit) {
-            throw "Windows desktop artifact exceeds the 100 MiB limit"
+            throw "Windows desktop artifact exceeds the 80 MiB limit"
           }
       - name: Upload release asset
         shell: bash

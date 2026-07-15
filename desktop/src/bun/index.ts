@@ -11,6 +11,7 @@ import {
 } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
+import { createXiaolaiFontServer } from "./xiaolai";
 
 const HOST = "127.0.0.1";
 const FRONTEND_PORT = 32144;
@@ -27,6 +28,7 @@ const backendDir = join(resourcesDir, "backend");
 const dataDir = Utils.paths.userData;
 const databasePath = join(dataDir, "excalidash.db");
 const uploadsDir = join(dataDir, "uploads");
+const serveXiaolaiFont = await createXiaolaiFontServer(resourcesDir, dataDir);
 
 mkdirSync(dataDir, { recursive: true });
 mkdirSync(uploadsDir, { recursive: true });
@@ -51,10 +53,9 @@ Object.assign(process.env, {
 });
 
 const backend = await import(join(backendDir, "dist/index.js"));
-const database = await import(join(backendDir, "dist/db/prisma.js"));
 
-await database.configureSqlite();
-await database.prisma.systemConfig.upsert({
+await backend.configureSqlite();
+await backend.prisma.systemConfig.upsert({
   where: { id: "default" },
   update: {
     authEnabled: false,
@@ -96,7 +97,7 @@ const shutdown = () => {
     frontendServer?.stop(true);
     backend.httpServer.close();
     try {
-      await database.prisma.$disconnect();
+      await backend.prisma.$disconnect();
     } finally {
       Utils.quit();
     }
@@ -128,6 +129,10 @@ frontendServer = Bun.serve({
   async fetch(request) {
     const url = new URL(request.url);
     const pathname = decodeURIComponent(url.pathname);
+    if (request.method === "GET") {
+      const fontResponse = await serveXiaolaiFont(pathname);
+      if (fontResponse) return fontResponse;
+    }
     if (
       browserLifecycleToken &&
       request.method === "POST" &&

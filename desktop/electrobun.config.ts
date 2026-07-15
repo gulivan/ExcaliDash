@@ -17,6 +17,7 @@ export default {
       "build/backend": "backend",
       "../frontend/dist": "frontend",
       "build/template.db": "template.db",
+      "build/xiaolai-manifest.json": "xiaolai-manifest.json",
     },
     mac: { bundleCEF: false },
     linux: { bundleCEF: false, defaultRenderer: "native" },
