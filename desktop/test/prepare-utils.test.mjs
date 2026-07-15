@@ -7,7 +7,6 @@ import test from "node:test";
 import {
   createXiaolaiManifest,
   pruneDesktopDependencies,
-  selectQueryEngine,
 } from "../scripts/prepare-utils.mjs";
 
 test(
@@ -32,38 +31,6 @@ test(
     });
   },
 );
-
-test("selects only the query engine matching the host binary target", () => {
-  const files = [
-    "libquery_engine-darwin-arm64.dylib.node",
-    "libquery_engine-linux-musl-openssl-3.0.x.so.node",
-    "query_engine-windows.dll.node",
-  ];
-
-  assert.equal(
-    selectQueryEngine(files, "linux-musl-openssl-3.0.x"),
-    "libquery_engine-linux-musl-openssl-3.0.x.so.node",
-  );
-  assert.equal(
-    selectQueryEngine(files, "windows"),
-    "query_engine-windows.dll.node",
-  );
-});
-
-test("rejects missing and ambiguous query engines", () => {
-  assert.throws(() => selectQueryEngine([], "darwin-arm64"), /found 0/);
-  assert.throws(
-    () =>
-      selectQueryEngine(
-        [
-          "libquery_engine-darwin-arm64.dylib.node",
-          "query_engine-darwin-arm64.dylib.node",
-        ],
-        "darwin-arm64",
-      ),
-    /found 2/,
-  );
-});
 
 test("prunes desktop build material while retaining runtime and license files", async (t) => {
   const root = await mkdtemp(join(tmpdir(), "localdraw-prune-"));

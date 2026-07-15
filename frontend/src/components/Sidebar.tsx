@@ -39,6 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onDeleteCollection,
   onDrop,
 }) => {
+  const sharingEnabled = import.meta.env.VITE_DESKTOP_MINIMAL !== "true";
   const { logout, user, authEnabled } = useAuth();
   const [isCreating, setIsCreating] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
@@ -118,13 +119,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span className="min-w-0 flex-1 text-left">All Drawings</span>
               </button>
             </div>
-            <SidebarItem
-              id={"shared"}
-              icon={<Shield size={18} />}
-              label="Shared with me"
-              isActive={selectedCollectionId === "shared"}
-              onClick={() => onSelectCollection("shared")}
-            />
+            {sharingEnabled ? (
+              <SidebarItem
+                id={"shared"}
+                icon={<Shield size={18} />}
+                label="Shared with me"
+                isActive={selectedCollectionId === "shared"}
+                onClick={() => onSelectCollection("shared")}
+              />
+            ) : null}
             <SidebarItem
               id={null}
               icon={<Archive size={18} />}
@@ -243,7 +246,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             setEditingId(collection.id);
             setEditName(collection.name);
           }}
-          onShareCollection={setCollectionToShare}
+          onShareCollection={sharingEnabled ? setCollectionToShare : undefined}
           onDeleteCollection={setCollectionToDelete}
         />
       )}
@@ -260,14 +263,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         }}
         onCancel={() => setCollectionToDelete(null)}
       />
-      <ShareCollectionModal
-        isOpen={!!collectionToShare}
-        collectionId={collectionToShare ?? ""}
-        collectionName={
-          collections.find((c) => c.id === collectionToShare)?.name ?? ""
-        }
-        onClose={() => setCollectionToShare(null)}
-      />
+      {sharingEnabled ? (
+        <ShareCollectionModal
+          isOpen={!!collectionToShare}
+          collectionId={collectionToShare ?? ""}
+          collectionName={
+            collections.find((c) => c.id === collectionToShare)?.name ?? ""
+          }
+          onClose={() => setCollectionToShare(null)}
+        />
+      ) : null}
     </>
   );
 };

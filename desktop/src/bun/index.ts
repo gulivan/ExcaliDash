@@ -1,4 +1,4 @@
-import Electrobun, {
+import {
   ApplicationMenu,
   BrowserWindow,
   PATHS,
@@ -119,7 +119,7 @@ ApplicationMenu.setApplicationMenu([
   },
 ]);
 
-Electrobun.events.on("application-menu-clicked", (event) => {
+ApplicationMenu.on("application-menu-clicked", (event) => {
   if ((event as any).data?.action === "quit") void shutdown();
 });
 

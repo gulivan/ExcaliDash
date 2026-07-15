@@ -175,7 +175,9 @@ export const EditorView: React.FC<EditorViewProps> = ({
             <History size={20} />
           </button>
         ) : null}
-        {accessLevel === "owner" && id ? (
+        {accessLevel === "owner" &&
+        id &&
+        import.meta.env.VITE_DESKTOP_MINIMAL !== "true" ? (
           <button
             onClick={onShareOpen}
             className="p-2 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg text-gray-600 dark:text-gray-300 transition-colors"
@@ -253,6 +255,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
           onLibraryChange={onLibraryChange}
           excalidrawAPI={onSetExcalidrawAPI}
           UIOptions={UIOptions}
+          aiEnabled={import.meta.env.VITE_DESKTOP_MINIMAL !== "true"}
           viewModeEnabled={!canEdit}
         >
           <MainMenu>

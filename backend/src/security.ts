@@ -1,7 +1,7 @@
 /**
  * Security utilities for XSS prevention, data sanitization, and CSRF protection
  */
-import { z } from "zod"; import DOMPurify from "dompurify"; import { JSDOM } from "jsdom"; import crypto from "crypto"; const window = new JSDOM("").window; const purify = DOMPurify(window);
+import { z } from "zod"; import sanitizeHtmlLibrary from "sanitize-html"; import crypto from "crypto"; const purify = { sanitize: (input: string, config: { ALLOWED_TAGS: string[]; ALLOWED_ATTR: string[]; KEEP_CONTENT?: boolean; [key: string]: unknown }) => sanitizeHtmlLibrary(input, { allowedTags: config.ALLOWED_TAGS, allowedAttributes: { "*": config.ALLOWED_ATTR }, allowedSchemes: ["http", "https", "mailto", "data"], allowedSchemesAppliedToAttributes: ["href", "src", "xlink:href"], allowProtocolRelative: false, disallowedTagsMode: config.KEEP_CONTENT ? "discard" : "completelyDiscard", parser: { lowerCaseAttributeNames: false, lowerCaseTags: false }, }) };
 /**
  * Configuration for security limits
  */

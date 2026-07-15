@@ -21,6 +21,7 @@ const buildLabel = process.env.VITE_APP_BUILD_LABEL?.trim() || "local developmen
 export default defineConfig(({ command }) => {
   const nodeEnv = process.env.NODE_ENV || (command === "build" ? "production" : "development");
   const devBackendTarget = process.env.VITE_DEV_BACKEND_URL?.trim() || "http://localhost:8000";
+  const minimalDesktopBuild = process.env.VITE_DESKTOP_MINIMAL === "true";
   const processEnvDefines = {
     'process.env.IS_PREACT': JSON.stringify("false"),
     'process.env.NODE_ENV': JSON.stringify(nodeEnv),
@@ -28,6 +29,16 @@ export default defineConfig(({ command }) => {
 
   return {
     plugins: [react()],
+    resolve: minimalDesktopBuild
+      ? {
+          alias: {
+            "@excalidraw/mermaid-to-excalidraw": path.resolve(
+              __dirname,
+              "src/stubs/mermaid-to-excalidraw.ts",
+            ),
+          },
+        }
+      : undefined,
     define: {
       ...processEnvDefines,
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),

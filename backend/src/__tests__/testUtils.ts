@@ -5,6 +5,7 @@ import { PrismaClient } from "../generated/client";
 import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
+import { createPrismaClient } from "../db/createPrismaClient";
 
 const TEST_DB_FILENAME = `test.${process.pid}.${Math.random().toString(16).slice(2)}.db`;
 const TEST_DB_PATH = path.resolve(__dirname, "../../prisma", TEST_DB_FILENAME);
@@ -52,13 +53,7 @@ const withDbPushLock = (fn: () => void) => {
 export const getTestPrisma = () => {
   const databaseUrl = `file:${TEST_DB_PATH}`;
   process.env.DATABASE_URL = databaseUrl;
-  return new PrismaClient({
-    datasources: {
-      db: {
-        url: databaseUrl,
-      },
-    },
-  });
+  return createPrismaClient(databaseUrl);
 };
 
 /**

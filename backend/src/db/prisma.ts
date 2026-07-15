@@ -1,11 +1,12 @@
 import { PrismaClient } from "../generated/client";
+import { createPrismaClient } from "./createPrismaClient";
 
 declare global {
   // eslint-disable-next-line no-var
   var __excalidashPrisma: PrismaClient | undefined;
 }
 
-const prismaClient = globalThis.__excalidashPrisma ?? new PrismaClient();
+const prismaClient = globalThis.__excalidashPrisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalThis.__excalidashPrisma = prismaClient;

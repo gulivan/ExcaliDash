@@ -7,21 +7,6 @@ import {
 import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 
-export const selectQueryEngine = (fileNames, binaryTarget) => {
-  const marker = `query_engine-${binaryTarget}.`;
-  const matches = fileNames.filter(
-    (name) => name.includes(marker) && name.endsWith(".node"),
-  );
-
-  if (matches.length !== 1) {
-    throw new Error(
-      `Expected one Prisma query engine for ${binaryTarget}, found ${matches.length}.`,
-    );
-  }
-
-  return matches[0];
-};
-
 export const createXiaolaiManifest = (directory, packageVersion) => {
   const files = {};
   for (const entry of readdirSync(directory, { withFileTypes: true }).sort(
@@ -56,6 +41,8 @@ export const pruneDesktopDependencies = (stagedBackendDir) => {
     "node_modules/@prisma/fetch-engine",
     "node_modules/@types",
     "node_modules/better-sqlite3/deps",
+    "node_modules/better-sqlite3/src",
+    "node_modules/better-sqlite3/binding.gyp",
     "node_modules/zod/src",
   ];
 

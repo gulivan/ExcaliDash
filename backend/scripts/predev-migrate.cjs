@@ -95,8 +95,8 @@ const shouldForceSingleUserDev =
   /^(1|true|yes)$/i.test(process.env.EXCALIDASH_DEV_SINGLE_USER || "");
 
 const forceSingleUserDevMode = async () => {
-  const { PrismaClient } = require("../src/generated/client");
-  const prisma = new PrismaClient();
+  const { createPrismaClient } = require("./create-prisma-client.cjs");
+  const prisma = createPrismaClient(databaseUrl);
 
   try {
     await prisma.systemConfig.upsert({

@@ -1,4 +1,3 @@
-import { createRequire } from "node:module";
 import {
   cpSync,
   existsSync,
@@ -13,7 +12,6 @@ import { spawnSync } from "node:child_process";
 import {
   createXiaolaiManifest,
   pruneDesktopDependencies,
-  selectQueryEngine,
 } from "./prepare-utils.mjs";
 
 const desktopDir = resolve(import.meta.dirname, "..");
@@ -24,10 +22,9 @@ const buildDir = resolve(desktopDir, "build");
 const stagedBackendDir = resolve(buildDir, "backend");
 const stagedBackendDistDir = resolve(stagedBackendDir, "dist");
 const generatedClientDir = resolve(backendDir, "src/generated/client");
-const stagedGeneratedClientDir = resolve(stagedBackendDir, "dist/generated/client");
+const stagedGeneratedClientDir = resolve(stagedBackendDistDir, "generated/client");
 const templateDb = resolve(buildDir, "template.db");
 const xiaolaiManifestPath = resolve(buildDir, "xiaolai-manifest.json");
-const requireFromBackend = createRequire(resolve(backendDir, "package.json"));
 
 const run = (command, args, options = {}) => {
   const result = spawnSync(command, args, {
@@ -46,6 +43,7 @@ run("npm", ["run", "build"], {
     ...process.env,
     VITE_API_URL: "http://127.0.0.1:32145",
     VITE_APP_BUILD_LABEL: "Electrobun desktop",
+    VITE_DESKTOP_MINIMAL: "true",
   },
 });
 
@@ -94,40 +92,26 @@ const bunExecutable = resolve(
 run(
   bunExecutable,
   [
-    "build",
+    resolve(desktopDir, "scripts/bundle-backend.mjs"),
     resolve(backendDir, "dist/index.js"),
-    "--target=bun",
-    "--format=cjs",
-    "--minify",
-    `--outfile=${resolve(stagedBackendDistDir, "index.js")}`,
-    "--external=*generated/client",
-    "--external=better-sqlite3",
-    "--external=bcrypt",
+    resolve(stagedBackendDistDir, "index.js"),
   ],
   { cwd: backendDir, shell: false },
 );
 
-const { getBinaryTargetForCurrentPlatform } = requireFromBackend("@prisma/get-platform");
-const binaryTarget = await getBinaryTargetForCurrentPlatform();
-const queryEngine = selectQueryEngine(readdirSync(generatedClientDir), binaryTarget);
-mkdirSync(stagedGeneratedClientDir, { recursive: true });
 mkdirSync(resolve(stagedGeneratedClientDir, "runtime"), { recursive: true });
-cpSync(
-  resolve(backendDir, "dist/generated/client/index.js"),
-  resolve(stagedGeneratedClientDir, "index.js"),
-);
-cpSync(
-  resolve(backendDir, "dist/generated/client/runtime/library.js"),
-  resolve(stagedGeneratedClientDir, "runtime/library.js"),
-);
-cpSync(
-  resolve(generatedClientDir, "schema.prisma"),
-  resolve(stagedGeneratedClientDir, "schema.prisma"),
-);
-cpSync(
-  resolve(generatedClientDir, queryEngine),
-  resolve(stagedGeneratedClientDir, queryEngine),
-);
+for (const relativePath of [
+  "index.js",
+  "query_compiler_bg.js",
+  "query_compiler_bg.wasm",
+  "runtime/client.js",
+  "schema.prisma",
+]) {
+  cpSync(
+    resolve(generatedClientDir, relativePath),
+    resolve(stagedGeneratedClientDir, relativePath),
+  );
+}
 
 const generatedClientProxyDir = resolve(stagedBackendDir, "generated/client");
 mkdirSync(generatedClientProxyDir, { recursive: true });
@@ -143,19 +127,20 @@ cpSync(
   resolve(workerDir, "db-verify.js"),
 );
 
-for (const packageName of [
-  "bcrypt",
-  "better-sqlite3",
-  "bindings",
-  "file-uri-to-path",
-  "node-gyp-build",
-]) {
-  cpSync(
-    resolve(backendDir, "node_modules", packageName),
-    resolve(stagedBackendDir, "node_modules", packageName),
-    { recursive: true },
-  );
+const libsqlScopeDir = resolve(backendDir, "node_modules/@libsql");
+const libsqlNativePackage = readdirSync(libsqlScopeDir, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .find((entry) => existsSync(resolve(libsqlScopeDir, entry.name, "index.node")));
+if (!libsqlNativePackage) {
+  throw new Error("Could not find libSQL's host native package.");
 }
+const stagedLibsqlScopeDir = resolve(stagedBackendDir, "node_modules/@libsql");
+mkdirSync(stagedLibsqlScopeDir, { recursive: true });
+cpSync(
+  resolve(libsqlScopeDir, libsqlNativePackage.name),
+  resolve(stagedLibsqlScopeDir, libsqlNativePackage.name),
+  { recursive: true },
+);
 cpSync(
   resolve(backendDir, "package.json"),
   resolve(stagedBackendDir, "package.json"),

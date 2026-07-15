@@ -12,6 +12,7 @@ export default {
   build: {
     bun: {
       entrypoint: "src/bun/index.ts",
+      minify: true,
     },
     copy: {
       "build/backend": "backend",
