@@ -11,6 +11,7 @@ const FRONTEND_PORT = 32144;
 const BACKEND_PORT = 32145;
 const appUrl = `http://${HOST}:${FRONTEND_PORT}`;
 const backendUrl = `http://${HOST}:${BACKEND_PORT}`;
+const browserMode = process.argv.includes("--browser");
 const resourcesDir = join(PATHS.RESOURCES_FOLDER, "app");
 const backendDir = join(resourcesDir, "backend");
 const dataDir = Utils.paths.userData;
@@ -82,16 +83,24 @@ Bun.serve({
   },
 });
 
-new BrowserWindow({
-  title: "ExcaliDash",
-  url: appUrl,
-  renderer: "native",
-  frame: {
-    width: 1440,
-    height: 960,
-    x: 80,
-    y: 60,
-  },
-});
+const openNativeWindow = () =>
+  new BrowserWindow({
+    title: "LocalDraw",
+    url: appUrl,
+    renderer: "native",
+    frame: {
+      width: 1440,
+      height: 960,
+      x: 80,
+      y: 60,
+    },
+  });
 
-console.log(`ExcaliDash is running locally at ${appUrl} (API: ${backendUrl})`);
+const openedInBrowser = browserMode && Utils.openExternal(appUrl);
+if (!openedInBrowser) {
+  openNativeWindow();
+}
+
+console.log(
+  `LocalDraw is running locally at ${appUrl} (API: ${backendUrl}, renderer: ${openedInBrowser ? "browser" : "native"})`,
+);
