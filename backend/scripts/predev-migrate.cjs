@@ -1,9 +1,10 @@
 /* eslint-disable no-console */
 const fs = require("fs");
 const path = require("path");
-const { runPrisma } = require("./provider-prisma.cjs");
+const { execFileSync } = require("child_process");
 
 const backendRoot = path.resolve(__dirname, "..");
+const npxBin = process.platform === "win32" ? "npx.cmd" : "npx";
 
 const resolveDatabaseUrl = (rawUrl) => {
   const defaultDbPath = path.resolve(backendRoot, "prisma/dev.db");
@@ -13,7 +14,7 @@ const resolveDatabaseUrl = (rawUrl) => {
   }
 
   if (!String(rawUrl).startsWith("file:")) {
-    return String(rawUrl);
+    throw new Error("DATABASE_URL must use a SQLite file: URL");
   }
 
   const filePath = String(rawUrl).replace(/^file:/, "");
@@ -36,7 +37,8 @@ const nodeEnv = process.env.NODE_ENV || "development";
 
 const runCapture = (args) => {
   try {
-    const stdout = runPrisma(args, {
+    const stdout = execFileSync(npxBin, ["prisma", ...args], {
+      cwd: backendRoot,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
       env: { ...process.env, DATABASE_URL: databaseUrl },
@@ -61,20 +63,17 @@ const runCapture = (args) => {
 };
 
 const run = (args) => {
-  runPrisma(args, {
+  execFileSync(npxBin, ["prisma", ...args], {
+    cwd: backendRoot,
     stdio: "inherit",
     env: { ...process.env, DATABASE_URL: databaseUrl },
   });
 };
 
-const getDbFilePath = () => {
-  if (!databaseUrl.startsWith("file:")) return null;
-  return databaseUrl.replace(/^file:/, "");
-};
+const getDbFilePath = () => databaseUrl.replace(/^file:/, "");
 
 const backupDbIfPresent = () => {
   const dbPath = getDbFilePath();
-  if (!dbPath) return null;
   if (!fs.existsSync(dbPath)) return null;
 
   const dir = path.dirname(dbPath);
@@ -87,7 +86,6 @@ const backupDbIfPresent = () => {
 };
 
 const isNonProd = nodeEnv !== "production";
-const isFileDb = databaseUrl.startsWith("file:");
 const shouldForceSingleUserDev =
   isNonProd &&
   process.env.AUTH_MODE !== "hybrid" &&
@@ -133,13 +131,13 @@ const main = async () => {
     const stderr = deploy.stderr || "";
     const isP3005 = stderr.includes("P3005");
 
-    if (isNonProd && isFileDb && isP3005) {
+    if (isNonProd && isP3005) {
       const backupPath = backupDbIfPresent();
       console.warn(
         `[predev] Prisma migrate baseline required (P3005). Resetting local SQLite database.\n` +
           `  DATABASE_URL=${databaseUrl}\n` +
           (backupPath ? `  Backup: ${backupPath}\n` : "") +
-        `  If you need to preserve local data, restore the backup and baseline manually.`,
+          `  If you need to preserve local data, restore the backup and baseline manually.`,
       );
 
       run(["migrate", "reset", "--force", "--skip-seed"]);

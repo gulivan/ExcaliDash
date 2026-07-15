@@ -2,15 +2,15 @@
 
 require("dotenv").config();
 
+const { execFileSync } = require("child_process");
 const path = require("path");
-const { runPrisma } = require("./provider-prisma.cjs");
 
 const BOOTSTRAP_USER_ID = "bootstrap-admin";
 const DEFAULT_SYSTEM_CONFIG_ID = "default";
 const backendRoot = path.resolve(__dirname, "..");
+const npxBin = process.platform === "win32" ? "npx.cmd" : "npx";
 
 const resolveDatabaseUrl = (rawUrl) => {
-  const backendRoot = path.resolve(__dirname, "..");
   const defaultDbPath = path.resolve(backendRoot, "prisma/dev.db");
 
   if (!rawUrl || String(rawUrl).trim().length === 0) {
@@ -18,7 +18,7 @@ const resolveDatabaseUrl = (rawUrl) => {
   }
 
   if (!String(rawUrl).startsWith("file:")) {
-    return String(rawUrl);
+    throw new Error("DATABASE_URL must use a SQLite file: URL");
   }
 
   const filePath = String(rawUrl).replace(/^file:/, "");
@@ -35,6 +35,12 @@ const resolveDatabaseUrl = (rawUrl) => {
 };
 
 process.env.DATABASE_URL = resolveDatabaseUrl(process.env.DATABASE_URL);
+
+const runPrisma = (args, options = {}) =>
+  execFileSync(npxBin, ["prisma", ...args], {
+    cwd: backendRoot,
+    ...options,
+  });
 
 const parseArgs = (argv) => {
   const parsed = {
@@ -96,7 +102,7 @@ const run = async () => {
 
   assertScenario(args.scenario);
 
-const nodeEnv = process.env.NODE_ENV || "development";
+  const nodeEnv = process.env.NODE_ENV || "development";
   if (nodeEnv === "production" && !args.allowProd) {
     throw new Error(
       "Refusing to run in production. Pass --allow-production only if you explicitly intend this."

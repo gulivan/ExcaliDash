@@ -315,7 +315,7 @@ include make/release.mk
 
 db-migrate: ## Run database migrations
 	@echo "Running database migrations..."
-	cd backend && node scripts/provider-prisma.cjs --persist-provider-migrations migrate dev --skip-generate
+	cd backend && npx prisma migrate dev --skip-generate
 	@echo "Migrations complete."
 
 db-generate: ## Generate Prisma client
@@ -327,7 +327,7 @@ db-reset: ## Reset database (WARNING: destroys all data)
 	@echo "WARNING: This will destroy all data!"
 	@read -p "Are you sure? [y/N]: " confirm; \
 	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
-		cd backend && node scripts/provider-prisma.cjs migrate reset --force --skip-generate; \
+		cd backend && npx prisma migrate reset --force --skip-generate; \
 		echo "Database reset complete."; \
 	else \
 		echo "Cancelled"; \

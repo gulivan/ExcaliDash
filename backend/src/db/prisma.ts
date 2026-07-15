@@ -21,11 +21,6 @@ if (process.env.NODE_ENV !== "production") {
  * with WAL + busy_timeout already applied.
  */
 export async function configureSqlite(): Promise<void> {
-  const databaseUrl = process.env.DATABASE_URL ?? "";
-  // PRAGMA statements only apply to SQLite; skip them for other providers.
-  if (databaseUrl && !databaseUrl.startsWith("file:")) {
-    return;
-  }
   try {
     // Order matters: PRAGMA journal_mode = WAL has to acquire the write
     // lock briefly, and without busy_timeout it fails immediately on

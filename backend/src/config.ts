@@ -35,7 +35,7 @@ interface BackupConfig {
 interface Config {
   port: number;
   nodeEnv: string;
-  databaseUrl?: string;
+  databaseUrl: string;
   uploadDir: string;
   frontendUrl?: string;
   authMode: AuthMode;
@@ -192,7 +192,7 @@ const resolveDatabaseUrl = (rawUrl?: string) => {
   }
 
   if (!rawUrl.startsWith("file:")) {
-    return rawUrl;
+    throw new Error("DATABASE_URL must use a SQLite file: URL");
   }
 
   const filePath = rawUrl.replace(/^file:/, "");

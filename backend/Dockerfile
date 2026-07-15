@@ -16,11 +16,7 @@ RUN npm ci && npm cache clean --force
 # Copy prisma schema
 COPY prisma ./prisma/
 
-# Set default provider for build-time Prisma generation (runtime can override via DATABASE_PROVIDER)
-RUN sed -i '/datasource db {/,/}/ s/provider = env("[^"]*")/provider = "sqlite"/; /datasource db {/,/}/ s/provider = "[^"]*"/provider = "sqlite"/' prisma/schema.prisma
-
 # Generate Prisma Client at build time (for TypeScript compilation)
-# Runtime will regenerate if DATABASE_PROVIDER differs
 RUN npx prisma generate
 
 # Copy source code
@@ -48,14 +44,13 @@ RUN apk add --no-cache --virtual .build-deps python3 make g++ && \
     npm cache clean --force && \
     apk del .build-deps
 
-# Copy prisma schema and migrations for runtime and hydration template
-COPY prisma ./prisma/
+# Copy schema and migrations for runtime volume hydration
 COPY prisma ./prisma_template/
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
 
-# Copy the generated Prisma Client from builder (will be regenerated at runtime if provider changes)
+# Copy the generated Prisma Client from builder
 COPY --from=builder /app/src/generated ./dist/generated
 
 # Create necessary directories (ownership will be set in entrypoint)

@@ -4,10 +4,10 @@ Release date: 2026-06-21
 
 ## Key changes
 
-- Add runtime-selectable Prisma provider support for SQLite and PostgreSQL deployments.
-- Add provider-specific migration handling for Docker startup and local Prisma workflows.
-- Add PostgreSQL compose/test coverage and health-check coverage for containerized deployments.
-- Preserve SQLite as the default deployment path while allowing `DATABASE_PROVIDER=postgresql`.
+- Keep the backend SQLite-only and remove unused database-provider dependencies and configuration.
+- Use Prisma's standard migration layout while preserving every existing SQLite migration name and checksum.
+- Reduce Docker startup work by reusing the build-stage Prisma Client instead of regenerating it at runtime.
+- Reduce the LocalDraw desktop runtime bundle and omit deployment-only implementations.
 
 ## Upgrading
 

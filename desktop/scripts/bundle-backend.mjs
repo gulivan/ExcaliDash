@@ -15,7 +15,6 @@ const desktopOnlyModules = new Map([
     requireFromBackend.resolve("@prisma/adapter-libsql"),
   ],
   ["@prisma/adapter-better-sqlite3", resolve(stubsDir, "prisma-adapter.ts")],
-  ["@prisma/adapter-pg", resolve(stubsDir, "prisma-pg.ts")],
   ["better-sqlite3", resolve(stubsDir, "better-sqlite3.ts")],
   ["bcrypt", resolve(stubsDir, "bcrypt.ts")],
   ["openid-client", resolve(stubsDir, "openid-client.ts")],

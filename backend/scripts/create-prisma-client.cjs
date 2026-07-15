@@ -1,14 +1,11 @@
 const { PrismaClient } = require("../src/generated/client");
+const { PrismaBetterSQLite3 } = require("@prisma/adapter-better-sqlite3");
 
 const createPrismaClient = (databaseUrl = process.env.DATABASE_URL) => {
-  if (/^(?:postgres|postgresql):\/\//i.test(databaseUrl || "")) {
-    const { PrismaPg } = require("@prisma/adapter-pg");
-    return new PrismaClient({
-      adapter: new PrismaPg({ connectionString: databaseUrl }),
-    });
+  if (!databaseUrl || !databaseUrl.startsWith("file:")) {
+    throw new Error("DATABASE_URL must use a SQLite file: URL");
   }
 
-  const { PrismaBetterSQLite3 } = require("@prisma/adapter-better-sqlite3");
   return new PrismaClient({
     adapter: new PrismaBetterSQLite3({ url: databaseUrl }),
   });

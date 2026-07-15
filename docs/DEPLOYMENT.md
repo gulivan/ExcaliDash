@@ -206,8 +206,7 @@ Base values are documented in `backend/.env.example`. Common ones to care about:
 
 | Variable                 | Default / Example         | Description                                                                         |
 | ------------------------ | ------------------------- | ----------------------------------------------------------------------------------- |
-| `DATABASE_PROVIDER`      | `sqlite`                  | Database provider: `sqlite` or `postgresql`. See Database provider below.           |
-| `DATABASE_URL`           | `file:/app/prisma/dev.db` | SQLite file or external DB URL.                                                     |
+| `DATABASE_URL`           | `file:/app/prisma/dev.db` | SQLite database file URL.                                                           |
 | `FRONTEND_URL`           | `http://localhost:6767`   | Allowed frontend origin(s), comma-separated for multiple entries.                   |
 | `TRUST_PROXY`            | `false`                   | `false`, `true`, or hop count (for example `1`).                                    |
 | `JWT_SECRET`             | `change-this-secret...`   | Recommended in production so sessions remain stable across restarts and migrations. |
@@ -221,38 +220,24 @@ Base values are documented in `backend/.env.example`. Common ones to care about:
 </details>
 
 <details>
-<summary>Database provider</summary>
+<summary>SQLite database</summary>
 
-ExcaliDash supports SQLite by default and PostgreSQL for deployments that want an external database. Set `DATABASE_PROVIDER` and `DATABASE_URL` together so startup, Prisma generation, and migrations all target the same provider.
-
-SQLite is the recommended single-instance path:
+ExcaliDash uses SQLite. Configure `DATABASE_URL` with a `file:` URL and persist the containing directory:
 
 ```yaml
 backend:
   environment:
-    - DATABASE_PROVIDER=sqlite
     - DATABASE_URL=file:/app/prisma/dev.db
   volumes:
     - /mnt/user/appdata/excalidash/prisma:/app/prisma
 ```
 
-PostgreSQL uses a normal Prisma PostgreSQL connection string:
-
-```yaml
-backend:
-  environment:
-    - DATABASE_PROVIDER=postgresql
-    - DATABASE_URL=postgresql://user:password@postgres:5432/excalidash
-```
-
-The Docker entrypoint copies the matching provider-specific migration folder and rewrites the runtime Prisma schema before running Prisma commands. For schema changes, generate migrations through the provider helper so checked-in migrations stay separated:
+The Docker entrypoint refreshes the packaged migration files before running `prisma migrate deploy`. For schema changes, generate a normal Prisma migration from the backend directory:
 
 ```bash
-export DATABASE_URL="postgresql://user:password@localhost:5432/excalidash"
-./scripts/generate-migrations.sh --dev add_feature_name
+cd backend
+DATABASE_URL=file:./dev.db npx prisma migrate dev --name add_feature_name
 ```
-
-The helper prompts for SQLite or PostgreSQL, sets `DATABASE_PROVIDER`, and writes the generated migration under `backend/prisma/migrations/<provider>/`. Switching providers does not migrate existing data between SQLite and PostgreSQL; treat the target database as a separate install unless you build and verify an explicit data migration.
 
 </details>
 

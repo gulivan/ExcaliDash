@@ -6,6 +6,17 @@ CSRF_SECRET_FILE="/app/prisma/.csrf_secret"
 MIGRATION_LOCK_DIR="/app/prisma/.migration-lock"
 MIGRATION_LOCK_TIMEOUT_SECONDS="${MIGRATION_LOCK_TIMEOUT_SECONDS:-120}"
 RUN_MIGRATIONS="${RUN_MIGRATIONS:-true}"
+DATABASE_URL="${DATABASE_URL:-file:/app/prisma/dev.db}"
+
+case "${DATABASE_URL}" in
+    file:*) ;;
+    *)
+        echo "ERROR: DATABASE_URL must use a SQLite file: URL"
+        exit 1
+        ;;
+esac
+
+export DATABASE_URL
 
 # Ensure JWT secret exists for production startup.
 # Backward compatibility: older installs may not have JWT_SECRET configured.
@@ -50,47 +61,21 @@ fi
 
 export CSRF_SECRET
 
-# Set default DATABASE_PROVIDER if not set
-if [ -z "${DATABASE_PROVIDER:-}" ]; then
-    echo "DATABASE_PROVIDER not set, defaulting to sqlite"
-    DATABASE_PROVIDER="sqlite"
-fi
-
-# Validate DATABASE_PROVIDER
-if [ "${DATABASE_PROVIDER}" != "sqlite" ] && [ "${DATABASE_PROVIDER}" != "postgresql" ]; then
-    echo "ERROR: DATABASE_PROVIDER must be 'sqlite' or 'postgresql', got '${DATABASE_PROVIDER}'"
-    exit 1
-fi
-
 # Ensure migrations directory exists
 mkdir -p /app/prisma/migrations
 
 # Copy schema.prisma from template
 cp /app/prisma_template/schema.prisma /app/prisma/schema.prisma
 
-# Clear and copy provider-specific migrations folder
-echo "Copying ${DATABASE_PROVIDER} migrations..."
+# Refresh the packaged SQLite migrations
+echo "Copying SQLite migrations..."
 rm -rf /app/prisma/migrations/*
-cp -R /app/prisma_template/migrations/"${DATABASE_PROVIDER}"/. /app/prisma/migrations/
-
-# Update schema.prisma with the runtime provider (handles both env() and static values)
-echo "Configuring Prisma for provider: ${DATABASE_PROVIDER}"
-sed -i '/datasource db {/,/}/ s/provider = env("[^"]*")/provider = "'"${DATABASE_PROVIDER}"'"/' /app/prisma/schema.prisma
-sed -i '/datasource db {/,/}/ s/provider = "[^"]*"/provider = "'"${DATABASE_PROVIDER}"'"/' /app/prisma/schema.prisma
-
-# Generate Prisma Client at runtime (run as root since schema is owned by root)
-echo "Generating Prisma Client..."
-npx prisma generate --schema=/app/prisma/schema.prisma
-
-# Copy generated client to the expected location for the application
-mkdir -p /app/dist/generated
-cp -r /app/src/generated/* /app/dist/generated/
+cp -R /app/prisma_template/migrations/. /app/prisma/migrations/
 
 # 2. Fix permissions unconditionally (Running as root)
 echo "Fixing filesystem permissions..."
-chown -R nodejs:nodejs /app/uploads /app/prisma /app/dist/generated
+chown -R nodejs:nodejs /app/uploads /app/prisma
 chmod 755 /app/uploads
-chmod -R 755 /app/dist/generated
 chmod 600 "${JWT_SECRET_FILE}"
 chmod 600 "${CSRF_SECRET_FILE}"
 
