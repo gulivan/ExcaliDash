@@ -1,6 +1,6 @@
 # localdraw
 
-Launch the local-first [ExcaliDash](https://github.com/gulivan/ExcaliDash) desktop app:
+Launch the local-first [ExcaliDash](https://github.com/gulivan/localdraw) desktop app:
 
 ```sh
 npx localdraw

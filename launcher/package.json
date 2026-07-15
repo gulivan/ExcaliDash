@@ -1,6 +1,6 @@
 {
   "name": "localdraw",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Launch the local-first ExcaliDash desktop app",
   "license": "AGPL-3.0-only",
   "type": "module",
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gulivan/ExcaliDash.git"
+    "url": "git+https://github.com/gulivan/localdraw.git"
   },
   "engines": {
     "node": ">=20"

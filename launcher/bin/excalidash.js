@@ -22,7 +22,7 @@ import {
   getTarget,
 } from "../lib/platform.js";
 
-const RELEASE_BASE_URL = `https://github.com/gulivan/ExcaliDash/releases/download/v${RELEASE_VERSION}`;
+const RELEASE_BASE_URL = `https://github.com/gulivan/localdraw/releases/download/v${RELEASE_VERSION}`;
 
 const run = (command, args) => {
   const result = spawnSync(command, args, { stdio: "inherit" });
