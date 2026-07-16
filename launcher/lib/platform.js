@@ -21,7 +21,7 @@ export const getTarget = (platform = process.platform, arch = process.arch) => {
 
   if (platform === "win32" && ["x64", "arm64"].includes(arch)) {
     return {
-      archive: `localdraw-${APP_VERSION}-win-x64.zip`,
+      archive: `localdraw-${APP_VERSION}-win-x64-portable.zip`,
       kind: "zip",
     };
   }

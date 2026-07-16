@@ -6,7 +6,10 @@ test("maps supported platforms to release assets", () => {
   assert.equal(getTarget("darwin", "arm64").archive, "localdraw-0.5.8-darwin-arm64.dmg");
   assert.equal(getTarget("darwin", "x64").archive, "localdraw-0.5.8-darwin-x64.dmg");
   assert.equal(getTarget("linux", "x64").archive, "localdraw-0.5.8-linux-x64.tar.gz");
-  assert.equal(getTarget("win32", "arm64").archive, "localdraw-0.5.8-win-x64.zip");
+  assert.equal(
+    getTarget("win32", "arm64").archive,
+    "localdraw-0.5.8-win-x64-portable.zip",
+  );
 });
 
 test("rejects architectures without a published native build", () => {
