@@ -3,6 +3,7 @@
 import { createHash } from "node:crypto";
 import { spawn, spawnSync } from "node:child_process";
 import {
+  copyFileSync,
   createReadStream,
   createWriteStream,
   existsSync,
@@ -90,17 +91,10 @@ const installTarball = (archivePath, installDir) => {
   renameSync(nextDir, installDir);
 };
 
-const installZip = (archivePath, installDir) => {
+const installExecutable = (archivePath, installDir) => {
   rmSync(installDir, { recursive: true, force: true });
   mkdirSync(installDir, { recursive: true });
-  const escapedArchive = archivePath.replaceAll("'", "''");
-  const escapedInstallDir = installDir.replaceAll("'", "''");
-  run("powershell.exe", [
-    "-NoProfile",
-    "-NonInteractive",
-    "-Command",
-    `Expand-Archive -LiteralPath '${escapedArchive}' -DestinationPath '${escapedInstallDir}' -Force`,
-  ]);
+  copyFileSync(archivePath, join(installDir, "localdraw-portable.exe"));
 };
 
 const findExecutable = (executables) => executables.find(existsSync);
@@ -127,7 +121,7 @@ if (!explicitlyConfiguredBinary && (!executable || installedVersion !== RELEASE_
     console.log("Installing LocalDraw...");
     if (target.kind === "dmg") installDmg(archivePath, layout.installDir, workDir);
     if (target.kind === "tar.gz") installTarball(archivePath, layout.installDir);
-    if (target.kind === "zip") installZip(archivePath, layout.installDir);
+    if (target.kind === "exe") installExecutable(archivePath, layout.installDir);
 
     executable = findExecutable(layout.executables);
     if (!executable) throw new Error("Installation finished but the application executable was not found.");
@@ -151,6 +145,7 @@ if (!executable) {
 }
 
 if (options.browser) {
+  process.env.LOCALDRAW_BROWSER_MODE = "1";
   console.log(`Opening LocalDraw in your browser at ${LOCALDRAW_URL}`);
 } else {
   console.log("Launching LocalDraw...");
@@ -158,7 +153,7 @@ if (options.browser) {
 const launch = getLaunchCommand({
   appBundle: layout.appBundle,
   executable,
-  args,
+  args: process.platform === "win32" && !explicitlyConfiguredBinary ? [] : args,
   useConfiguredBinary: Boolean(explicitlyConfiguredBinary),
 });
 

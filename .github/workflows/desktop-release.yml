@@ -268,25 +268,18 @@ jobs:
           $version = $tag -replace '^v', '' -replace '-desktop$', ''
           $bundleDir = 'desktop/portable-win/LocalDraw'
           $portableExe = "localdraw-$version-win-x64-portable.exe"
-          $portable = "localdraw-$version-win-x64-portable.zip"
-          Compress-Archive -Path "$bundleDir/*" -DestinationPath $portable -Force
           desktop/scripts/create-windows-portable-exe.ps1 `
             -Version $version `
             -BundlePath $bundleDir `
             -OutputPath $portableExe
-          foreach ($asset in @($portableExe, $portable)) {
-            $hash = (Get-FileHash -Algorithm SHA256 $asset).Hash.ToLowerInvariant()
-            "$hash  $asset" | Set-Content -NoNewline "$asset.sha256"
-          }
+          $hash = (Get-FileHash -Algorithm SHA256 $portableExe).Hash.ToLowerInvariant()
+          "$hash  $portableExe" | Set-Content -NoNewline "$portableExe.sha256"
           "asset=$portableExe" >> $env:GITHUB_OUTPUT
-          "portable=$portable" >> $env:GITHUB_OUTPUT
       - name: Report and enforce release size
         shell: pwsh
         run: |
           $asset = "${{ steps.asset.outputs.asset }}"
-          $portable = "${{ steps.asset.outputs.portable }}"
           $bytes = (Get-Item $asset).Length
-          $portableBytes = (Get-Item $portable).Length
           $limit = 80 * 1024 * 1024
           $bundle = 'desktop/portable-win/LocalDraw'
           $directorySize = {
@@ -298,7 +291,6 @@ jobs:
             '### Windows x64 desktop size'
             ''
             "- Portable executable: $('{0:N1}' -f ($bytes / 1MB)) MiB ($bytes bytes)"
-            "- Portable npx payload: $('{0:N1}' -f ($portableBytes / 1MB)) MiB ($portableBytes bytes)"
             "- Runtime: $(& $directorySize "$bundle/bin")"
             "- Backend: $(& $directorySize "$bundle/Resources/app/backend")"
             "- Frontend: $(& $directorySize "$bundle/Resources/app/frontend")"
@@ -307,9 +299,6 @@ jobs:
           if ($bytes -gt $limit) {
             throw "Windows desktop artifact exceeds the 80 MiB limit"
           }
-          if ($portableBytes -gt $limit) {
-            throw "Windows portable artifact exceeds the 80 MiB limit"
-          }
       - name: Upload release asset
         shell: bash
         env:
@@ -317,6 +306,4 @@ jobs:
         run: |
           gh release upload "${{ github.event.release.tag_name || inputs.tag }}" \
             "${{ steps.asset.outputs.asset }}" \
-            "${{ steps.asset.outputs.asset }}.sha256" \
-            "${{ steps.asset.outputs.portable }}" \
-            "${{ steps.asset.outputs.portable }}.sha256" --clobber
+            "${{ steps.asset.outputs.asset }}.sha256" --clobber

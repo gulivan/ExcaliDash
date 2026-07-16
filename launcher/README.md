@@ -6,7 +6,10 @@ Launch the local-first [ExcaliDash](https://github.com/gulivan/localdraw) deskto
 npx localdraw
 ```
 
-The command downloads a SHA-256-verified native release on first run, installs it in your user account, and opens it. Later runs launch the installed app immediately.
+The command downloads a SHA-256-verified native release on first run, caches it
+in your user account, and opens it. Later runs launch the cached app immediately.
+On Windows, the download is the same single-file portable executable published
+on the GitHub release.
 
 For the smoothest canvas performance on high-refresh-rate displays, run the
 local app in your default browser instead of the embedded webview:

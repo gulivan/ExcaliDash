@@ -8,7 +8,7 @@ test("maps supported platforms to release assets", () => {
   assert.equal(getTarget("linux", "x64").archive, "localdraw-0.5.9-linux-x64.tar.gz");
   assert.equal(
     getTarget("win32", "arm64").archive,
-    "localdraw-0.5.9-win-x64-portable.zip",
+    "localdraw-0.5.9-win-x64-portable.exe",
   );
 });
 
@@ -34,6 +34,6 @@ test("uses executable paths from flattened Electrobun bundles", () => {
   ]);
   assert.deepEqual(
     getInstallLayout("win32", "C:\\Users\\me", "C:\\LocalAppData").executables,
-    ["C:\\LocalAppData/LocalDraw/bin/launcher.exe"],
+    ["C:\\LocalAppData/LocalDraw/localdraw-portable.exe"],
   );
 });
