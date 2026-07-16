@@ -10,8 +10,10 @@ rmSync(resolve(backendDir, "src/generated/client"), {
   force: true,
 });
 
-const command = process.platform === "win32" ? "npx.cmd" : "npx";
-const result = spawnSync(command, ["prisma", "generate"], {
+const prismaCli = require.resolve("prisma/build/index.js", {
+  paths: [backendDir],
+});
+const result = spawnSync(process.execPath, [prismaCli, "generate"], {
   cwd: backendDir,
   stdio: "inherit",
 });
