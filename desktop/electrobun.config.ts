@@ -4,7 +4,7 @@ export default {
   app: {
     name: "ExcaliDash",
     identifier: "dev.gulivan.excalidash",
-    version: "0.5.7",
+    version: "0.5.8",
   },
   runtime: {
     exitOnLastWindowClosed: true,
