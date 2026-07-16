@@ -6,6 +6,20 @@ import { randomUUID } from "node:crypto";
 
 const databasePath = resolve(tmpdir(), `excalidash-desktop-${randomUUID()}.db`);
 copyFileSync(resolve(import.meta.dirname, "../build/template.db"), databasePath);
+
+const removeDatabase = () => {
+  try {
+    rmSync(databasePath, { force: true });
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (process.platform === "win32" && (code === "EBUSY" || code === "EPERM")) {
+      console.warn(`Temporary smoke database remains locked; leaving it for OS cleanup: ${databasePath}`);
+      return;
+    }
+    throw error;
+  }
+};
+
 Object.assign(process.env, {
   CSRF_SECRET: "desktop-smoke-csrf-secret-at-least-32-characters",
   DATABASE_URL: `file:${databasePath}`,
@@ -49,6 +63,6 @@ try {
   console.log("Desktop bun:sqlite Prisma smoke test passed");
 } finally {
   await backend.prisma.$disconnect();
-  rmSync(databasePath, { force: true });
+  removeDatabase();
 }
 process.exit(0);
