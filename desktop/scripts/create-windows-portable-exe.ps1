@@ -17,10 +17,11 @@ if (-not (Test-Path (Join-Path $bundle 'bin/launcher.exe'))) {
   throw "Windows portable launcher is missing from: $bundle"
 }
 
-$sevenZip = (Get-Command '7z.exe' -ErrorAction Stop).Source
-$sfxModule = Join-Path (Split-Path $sevenZip) '7z.sfx'
-if (-not (Test-Path $sfxModule)) {
-  throw "7-Zip SFX module is missing: $sfxModule"
+$sevenZipDir = Join-Path $env:ProgramFiles '7-Zip'
+$sevenZip = Join-Path $sevenZipDir '7z.exe'
+$sfxModule = Join-Path $sevenZipDir '7z.sfx'
+if (-not (Test-Path $sevenZip) -or -not (Test-Path $sfxModule)) {
+  throw "7-Zip executable or SFX module is missing from: $sevenZipDir"
 }
 
 $archive = Join-Path $env:RUNNER_TEMP "localdraw-$Version-portable.7z"
